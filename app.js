@@ -31,7 +31,13 @@ app.route('/')
 //show all products
 .get((req,res)=>{
     Coffee.find({},(err,proucts)=>{
-        res.send(proucts);
+        if(err){
+            console.log(err);
+        }else if(!proucts){
+            res.send("No Coffee found");
+        }else{
+            res.send(proucts);
+        }
     })    
 })
 //add a new product
@@ -47,6 +53,8 @@ app.route('/')
     newCoffee.save(err=>{
         if(!err){
             res.send("succussfully added a new coffee");
+        }else{
+            console.log(err);
         }
 
     })
@@ -54,18 +62,37 @@ app.route('/')
 
 })
 
+
+
+
 //CRUD for selected coffee
 app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added by MongoDB
 //show selected coffee to the user
 .get((req,res)=>{       
     const coffeeID= req.params.coffeeID;
-    res.send({coffee :coffeeID});
+    Coffee.findOne({_id:coffeeID}, (err, coffee)=>{
+        if(err){
+            console.log(err);
+        }else if(!coffee){
+            res.send("No Coffee found");
+        }else{
+            res.send(coffee);
+        }
+    })
 })
 
-//buy the selected coffee
-.post((req,res)=>{     
+//update DB when a user bought the selected coffee
+.patch((req,res)=>{     
     const coffeeID= req.params.coffeeID;
-    const quantity = req.body.quantity; // post request should include the number of cups as quantity
+    const quantity = req.body.quantity; // patch request should include the number of cups as quantity
+    Coffee.updateOne({_id:coffeeID},{$inc : {quantity:1}}, err=>{
+        if(!err){
+            res.send("You bought a coffee("+coffeeID+")");
+        }else{
+            console.log(err);
+        }
+    })
+
 })
 
 //start server on PORT 5000
