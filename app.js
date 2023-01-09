@@ -10,7 +10,8 @@ app.use(bodyParser.urlencoded({extended:true}));
 //connect to DB
 main().catch(err => console.log(err));
 async function main() {
-  await mongoose.connect('mongodb://127.0.0.1:27017/coffeeDB'); // database name is coffeeDB
+    mongoose.set("strictQuery", false);
+    await mongoose.connect('mongodb://127.0.0.1:27017/coffeeDB'); // database name is coffeeDB
 }
 
 // DB schema
@@ -34,7 +35,7 @@ app.route('/')
         if(err){
             console.log(err);
         }else if(!proucts){
-            res.status(404).send('Not found');
+            res.sendStatus(404);
         }else{
             res.send(proucts);
         }
@@ -49,6 +50,7 @@ app.route('/')
 //   quantity : Number,
 //     }
     //save new coffee in DB
+    console.log(req.body);
     const newCoffee = new Coffee(req.body);
     newCoffee.save(err=>{
         if(!err){
@@ -62,6 +64,17 @@ app.route('/')
 
 })
 
+//delete all products
+.delete((req,res)=>{
+    Coffee.deleteMany({}, err=>{
+        if(!err){
+            res.sendStatus(200);
+        }else{
+            console.log(err);
+        }
+    })
+});
+
 
 
 
@@ -74,7 +87,7 @@ app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added 
         if(err){
             console.log(err);
         }else if(!coffee){
-            res.status(404).send('Not found');
+            res.sendStatus(404);
         }else{
             res.send(coffee);
         }
@@ -85,20 +98,46 @@ app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added 
 .patch((req,res)=>{     
     const coffeeID= req.params.coffeeID;
     const coffeeCount = req.body.quantity; // patch request should include the number of cups as quantity
-    Coffee.findOneAndUpdate({_id:coffeeID},{$inc : {quantity:-coffeeCount}},{new: true}, (err, coffee)=>{
-        if(err){
-            console.log(err);
-        }else{
-            const userCost= coffee.price*coffeeCount;
-            res.send({cost:userCost});
+
+    //check if store has requested amount of coffee
+    Coffee.findOne({_id:coffeeID}, (err, coffee)=>{
+        if(coffee.quantity>=coffeeCount){
+
+            //then place the order
+            Coffee.findOneAndUpdate({_id:coffeeID},{$inc : {quantity:-coffeeCount}},{new: true}, (err, coffee)=>{
+                if(err){
+                    console.log(err);
+                }else{
+                    const userCost= coffee.price*coffeeCount;
+                    res.send({cost:userCost});
+                   
+                }
+            })
+            
+        }else
+        {
+            res.send({message:'There is no enough coffee'});
         }
     })
+    
+    
 
 })
 
+//delete selected coffee
+.delete((req,res)=>{
+    const coffeeID= req.params.coffeeID;
+    Coffee.deleteOne({_id:coffeeID}, err=>{
+        if(!err){
+            res.sendStatus(200);
+        }else{
+            console.log(err);
+        }
+    })
+})
 
 
 //start server on PORT 5000
 app.listen('5000', ()=>{
     console.log('server started');
-})
+});
