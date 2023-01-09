@@ -6,15 +6,6 @@ const app = express();
 
 app.use(bodyParser.urlencoded({extended:true}));
 
-//show all products
-app.route('/')
-.get((req,res)=>{
-    res.send("hi");    
-})
-
-//CRUD for selected coffee
-app.route('/coffee/:coffeeID')
-
 
 //connect to DB
 main().catch(err => console.log(err));
@@ -35,6 +26,36 @@ const Coffee = mongoose.model('Coffee', coffeeSchema);
 
 
 
+
+app.route('/')
+//show all products
+.get((req,res)=>{
+    Coffee.find({},(err,proucts)=>{
+        res.send(proucts);
+    })    
+})
+//add a new product
+.post((req,res)=>{
+//  post request should inculde fllowing data
+//     {
+//   name: String,
+//   price: Number,
+//   quantity : Number,
+//     }
+    //save new coffee in DB
+    const newCoffee = new Coffee(req.body);
+    newCoffee.save(err=>{
+        if(!err){
+            res.send("succussfully added a new coffee");
+        }
+
+    })
+
+
+})
+
+//CRUD for selected coffee
+app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added by MongoDB
 //show selected coffee to the user
 .get((req,res)=>{       
     const coffeeID= req.params.coffeeID;
