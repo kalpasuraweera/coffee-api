@@ -23,13 +23,15 @@ async function main() {
 }
 
 // DB schema
-const CoffeeSchema = new mongoose.Schema({
+const coffeeSchema = new mongoose.Schema({
   name: String,
   price: Number,
   quantity : Number,
 });
 
 // DB Model
+const Coffee = mongoose.model('Coffee', coffeeSchema);
+
 
 
 
