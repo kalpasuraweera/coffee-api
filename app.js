@@ -50,7 +50,6 @@ app.route('/')
 //   quantity : Number,
 //     }
     //save new coffee in DB
-    console.log(req.body);
     const newCoffee = new Coffee(req.body);
     newCoffee.save(err=>{
         if(!err){
