@@ -34,7 +34,7 @@ app.route('/')
         if(err){
             console.log(err);
         }else if(!proucts){
-            res.send("No Coffee found");
+            res.status(404).send('Not found');
         }else{
             res.send(proucts);
         }
@@ -52,7 +52,7 @@ app.route('/')
     const newCoffee = new Coffee(req.body);
     newCoffee.save(err=>{
         if(!err){
-            res.send("succussfully added a new coffee");
+            res.sendStatus(200);
         }else{
             console.log(err);
         }
@@ -74,7 +74,7 @@ app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added 
         if(err){
             console.log(err);
         }else if(!coffee){
-            res.send("No Coffee found");
+            res.status(404).send('Not found');
         }else{
             res.send(coffee);
         }
@@ -84,16 +84,19 @@ app.route('/coffee/:coffeeID')  // coffeeID is the _id that automatically added 
 //update DB when a user bought the selected coffee
 .patch((req,res)=>{     
     const coffeeID= req.params.coffeeID;
-    const quantity = req.body.quantity; // patch request should include the number of cups as quantity
-    Coffee.updateOne({_id:coffeeID},{$inc : {quantity:1}}, err=>{
-        if(!err){
-            res.send("You bought a coffee("+coffeeID+")");
-        }else{
+    const coffeeCount = req.body.quantity; // patch request should include the number of cups as quantity
+    Coffee.findOneAndUpdate({_id:coffeeID},{$inc : {quantity:-coffeeCount}},{new: true}, (err, coffee)=>{
+        if(err){
             console.log(err);
+        }else{
+            const userCost= coffee.price*coffeeCount;
+            res.send({cost:userCost});
         }
     })
 
 })
+
+
 
 //start server on PORT 5000
 app.listen('5000', ()=>{
